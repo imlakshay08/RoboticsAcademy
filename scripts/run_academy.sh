@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Default: cpu and offline
 gpu_mode="false"
@@ -55,3 +55,5 @@ if [ "$nvidia" = "true" ]; then
 else
   docker compose up
 fi
+
+cleanup

@@ -13,26 +13,29 @@ StatusChoice = (
     ("PROTOTYPE", "PROTOTYPE"),
 )
 
-VisualizationType = (
-    ("none", "None"),
-    ("console", "Console"),
-    ("gazebo_gra", "Gazebo GRA"),
-    ("gazebo_rae", "Gazebo RAE"),
-    ("gzsim_gra", "Gz Sim GRA"),
-    ("gzsim_rae", "Gz Sim RAE"),
-    ("physic_gra", "Physic GRA"),
-    ("physic_rae", "Physic RAE"),
-)
-
 UniverseType = (
     ("none", "None"),
     ("gazebo", "Gazebo"),
-    ("drones", "Gazebo Drones"),
-    ("gzsimdrones", "Gz Sim Drones"),
+    ("gz", "Gazebo Harmonic"),
     ("physical", "Physical"),
 )
 
 RosVersion = (("ROS", "ROS"), ("ROS2", "ROS2"))
+
+
+class Tool(models.Model):
+    """
+    Modelo Tool para Robotics Academy
+    """
+
+    name = models.CharField(max_length=50, blank=False, unique=True, primary_key=True)
+    base_config = models.CharField(max_length=200, blank=False)
+
+    def __str__(self):
+        return str(self.name)
+
+    class Meta:
+        db_table = '"tools"'
 
 
 class Robot(models.Model):
@@ -57,12 +60,9 @@ class World(models.Model):
 
     name = models.CharField(max_length=100, blank=False, unique=True)
     launch_file_path = models.CharField(max_length=200, blank=False)
-    visualization_config_path = models.CharField(max_length=200, blank=False)
+    tools_config = models.CharField(max_length=200, blank=False)
     ros_version = models.CharField(max_length=4, choices=RosVersion, default="none")
-    visualization = models.CharField(
-        max_length=50, choices=VisualizationType, default="none", blank=False
-    )
-    world = models.CharField(
+    type = models.CharField(
         max_length=50, choices=UniverseType, default="none", blank=False
     )
 
@@ -112,12 +112,13 @@ class Exercise(models.Model):
     exercise_id = models.CharField(max_length=40, blank=False, unique=True)
     name = models.CharField(max_length=40, blank=False, unique=True)
     description = models.CharField(max_length=400, blank=False)
-    tags = models.CharField(max_length=2000, default=json.dumps({"tags": ""}))
+    tags = models.CharField(max_length=2000, default=[])
     status = models.CharField(max_length=20, choices=StatusChoice, default="ACTIVE")
     universes = models.ManyToManyField(
-        Universe, default=None, db_table='"exercises_universes"'
+        Universe, default=None, through="ExerciseUniverses"
     )
-    template = models.CharField(max_length=200, blank=True, default="")
+    tools = models.ManyToManyField(Tool, default=None, db_table='"exercises_tools"')
+    url = models.CharField(max_length=200, blank=True, default="")
 
     def __str__(self):
         return str(self.name)
@@ -136,7 +137,22 @@ class Exercise(models.Model):
         else:
             ros_version = "ROS"
 
-        for universe in self.universes.all():
+        tools = []
+        tools_config = {}
+        for tool in self.tools.all():
+            tools.append(tool.name)
+            if tool.base_config != "None":
+                tools_config.update({tool.name: tool.base_config})
+
+        proj_univs = self.universes.all()
+        proj_univs = sorted(
+            proj_univs,
+            key=lambda univ: not ExerciseUniverses.objects.get(
+                exercise=self, universe=univ
+            ).is_default,
+        )
+
+        for universe in proj_univs:
             if (
                 universe.world.ros_version == ros_version
                 and universe.world.name != "None"
@@ -146,17 +162,21 @@ class Exercise(models.Model):
                         "name": universe.robot.name,
                         "launch_file_path": universe.robot.launch_file_path,
                         "ros_version": universe.world.ros_version,
-                        "world": universe.world.world,
-                        "start_pose": universe.world.start_pose
+                        "type": universe.world.type,
+                        "start_pose": universe.world.start_pose,
                     }
                 else:
                     robot_config = {
                         "name": None,
                         "launch_file_path": None,
                         "ros_version": None,
-                        "world": None,
+                        "type": None,
                         "start_pose": None,
                     }
+
+                tools_configuration = None
+                if universe.world.tools_config != "None":
+                    tools_configuration = json.loads(universe.world.tools_config)
 
                 config = {
                     "name": universe.name,
@@ -164,12 +184,12 @@ class Exercise(models.Model):
                         "name": universe.world.name,
                         "launch_file_path": universe.world.launch_file_path,
                         "ros_version": universe.world.ros_version,
-                        "world": universe.world.world,
+                        "type": universe.world.type,
+                        "tools_config": tools_configuration,
                     },
-                    "visualization": universe.world.visualization,
-                    "visualization_config_path": universe.world.visualization_config_path,
+                    "tools": tools,
+                    "tools_config": tools_config,
                     "robot": robot_config,
-                    "template": self.template,
                     "exercise_id": self.exercise_id,
                 }
 
@@ -183,29 +203,43 @@ class Exercise(models.Model):
                     "name": None,
                     "launch_file_path": None,
                     "ros_version": None,
-                    "world": None,
+                    "type": None,
+                    "tools_config": None,
                 },
                 "robot": {
                     "name": None,
                     "launch_file_path": None,
                     "ros_version": None,
-                    "world": None,
+                    "type": None,
                     "start_pose": None,
                 },
-                "visualization": "console",
-                "visualization_config_path": None,
-                "template": self.template,
+                "tools": tools,
+                "tools_config": tools_config,
                 "exercise_id": self.exercise_id,
             }
             configurations.append(config)
 
+        # Accesible from the exercise using document.getElementById("exercise-data")
         context = {
-            "exercise_base": "exercise_base_2_RA.html",
-            "exercise_id": self.exercise_id,
-            "exercise_config": configurations,
+            "exercise_data": {
+                "universes": configurations,
+                "tools": tools,
+                "name": self.name,
+                "exercise_id": self.exercise_id,
+                "url": self.url,
+                "tags": eval(self.tags),
+            },
         }
-        print(context)
         return context
 
     class Meta:
         db_table = '"exercises"'
+
+
+class ExerciseUniverses(models.Model):
+    exercise = models.ForeignKey(Exercise, on_delete=models.CASCADE)
+    universe = models.ForeignKey(Universe, on_delete=models.CASCADE)
+    is_default = models.BooleanField()
+
+    class Meta:
+        db_table = '"exercises_universes"'

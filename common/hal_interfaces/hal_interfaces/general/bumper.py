@@ -1,5 +1,9 @@
 from rclpy.node import Node
 from gazebo_msgs.msg import ContactsState
+import rclpy
+
+if not rclpy.ok():
+    rclpy.init()
 
 ### AUXILIARY FUNCTIONS ###
 
@@ -9,7 +13,6 @@ LEFT_BUMPER = 2
 
 
 class BumperData:
-
     def __init__(self):
 
         self.state = 0
@@ -43,7 +46,6 @@ def contactsToBumperData(contacts):
 
 ### HAL INTERFACE ###
 class BumperNode(Node):
-
     def __init__(self, topics):
         super().__init__("bumper_node")
 

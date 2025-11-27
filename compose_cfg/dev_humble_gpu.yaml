@@ -1,9 +1,9 @@
-version: '3.8'
-
 services:
   my-postgres:
     image: jderobot/robotics-database:latest
     container_name: universe_db
+    networks:
+      - db_network
     environment:
       POSTGRES_DB: academy_db 
       POSTGRES_USER: user-dev 
@@ -24,15 +24,15 @@ services:
   robotics-academy:
     image: jderobot/robotics-academy:latest
     container_name: developer-container
+    networks:
+      - db_network
     command:  "-s"
     devices:
-      - /dev/dri/card0:/dev/dri/card0
-      - /dev/dri/renderD128:/dev/dri/renderD128
+      - /dev/dri:/dev/dri
     ports:
       - "7164:7164"
       - "7163:7163"
-      - "6080:6080"
-      - "1108:1108"
+      - "6080-6090:6080-6090"
     volumes:
       - type: bind
         source: ./
@@ -40,8 +40,12 @@ services:
       - type: bind
         source: ./src
         target: /RoboticsApplicationManager
+      - ./RoboticsInfrastructure/database/universes.sql:/universes.sql
     tty: true
     stdin_open: true
     depends_on: 
       my-postgres:
         condition: service_healthy
+
+networks:
+  db_network:

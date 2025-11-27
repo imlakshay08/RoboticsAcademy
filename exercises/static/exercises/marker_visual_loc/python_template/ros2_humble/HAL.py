@@ -11,10 +11,24 @@ from hal_interfaces.general.camera import CameraNode
 
 freq = 90.0
 
+
+# Mutes exceptions
+def custom_thread_excepthook(args):
+    if "spin" in args.thread.name:
+        return
+    sys.__excepthook__(args.exc_type, args.exc_value, args.exc_traceback)
+
+
+threading.excepthook = custom_thread_excepthook
+
+
 def __auto_spin() -> None:
     while rclpy.ok():
-        executor.spin_once(timeout_sec=0)
-        time.sleep(1/freq)
+        try:
+            executor.spin_once(timeout_sec=0)
+        except Exception:
+            pass
+        time.sleep(1 / freq)
 
 
 if not rclpy.ok():
@@ -38,21 +52,24 @@ executor_thread = threading.Thread(target=__auto_spin, daemon=True)
 executor_thread.start()
 
 
-### GETTERS ### 
+### GETTERS ###
+
 
 # Pose
 def getPose3d():
     try:
         return odometry_node.getPose3d()
     except Exception as e:
-        print(f"Exception in hal getPose3d {repr(e)}")  
+        print(f"Exception in hal getPose3d {repr(e)}")
+
 
 # Pose
 def getOdom():
     try:
         return noisy_odometry_node.getPose3d()
     except Exception as e:
-        print(f"Exception in hal getPose3d {repr(e)}")  
+        print(f"Exception in hal getPose3d {repr(e)}")
+
 
 # Camera
 def getImage():
@@ -61,6 +78,7 @@ def getImage():
         image = camera_node.getImage()
     return image.data
 
+
 # Laser
 def getLaserData():
     laser_data = laser_node.getLaserData()
@@ -68,11 +86,14 @@ def getLaserData():
         laser_data = laser_node.getLaserData()
     return laser_data
 
+
 ### SETTERS ###
+
 
 # Linear speed
 def setV(v):
     motor_node.sendV(float(v))
+
 
 # Angular speed
 def setW(w):

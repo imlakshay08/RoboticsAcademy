@@ -2,7 +2,7 @@
 
 # RoboticsAcademy: Learn Robotics, Artificial Intelligence and Computer Vision
 
-JdeRobot Academy is an **open source** platform that provides a collection of exercises for learning robotics in a practical way. Its latest documentation (including installation recipes, current available exercises and illustrative videos) is on its <a href="https://jderobot.github.io/RoboticsAcademy">webpage</a>. RoboticsAcademy is completely ROS-based, and includes robotics standard tools like Gazebo and Rviz. 
+JdeRobot Academy is an **open source** platform that provides a collection of exercises for learning robotics in a practical way. Its latest documentation (including installation recipes, current available exercises and illustrative videos) is on its <a href="https://jderobot.github.io/RoboticsAcademy">webpage</a>. RoboticsAcademy is completely ROS-based, and includes robotics standard tools like Gazebo and Rviz.
 
 If you are a contributor, please note that we use GitHub Pages and a Jekyll theme (MinimalMistakes) for the Academy web page. Feel free to install Jekyll locally, so that, you can test your changes before submitting your pull-request.
 
@@ -18,20 +18,26 @@ Take a look at the [contributing](CONTRIBUTING.md) guide lines.
 
 ## Development resources
 
-- [Instructions for developers.][]
-- [Client side.][] (Robotics Academy architecture)
-- [Repository Architecture.][]
-- [Generate a RADI.][]
-- [Humble RADI structure.][]
-- [Develop using volume binding.][]
-- [ROS2 and superthin templates migration.][]
-- [Troubleshooting Robotics Academy][]
+-   [Instructions for developers.][]
+-   [Coding Style Guide][]
+-   [Client side.][] (Robotics Academy architecture)
+-   [Repository Architecture.][]
+-   [Generate a RADI.][]
+-   [Publishing a RADI.][]
+-   [Humble RADI structure.][]
+-   [Develop using volume binding.][]
+-   [ROS2 and superthin templates migration.][]
+-   [Troubleshooting Robotics Academy][]
+-   [Exercises Status][]
 
 [Instructions for developers.]: ./docs/InstructionsForDevelopers.md
+[Coding Style Guide]: ./docs/coding_style_guide.md
 [Client side.]: ./docs/clientside.md
 [Repository Architecture.]: ./docs/RepositoryArchitecture.md
 [Generate a RADI.]: ./docs/generate_a_radi.md
+[Publishing a RADI.]: ./.github/workflows/README.md
 [Humble RADI structure.]: ./scripts/RADI/README.md
 [Develop using volume binding.]: ./docs/develop_binding_volumes.md
 [ROS2 and superthin templates migration.]: ./docs/exercise-status.md
 [Troubleshooting Robotics Academy]: ./docs/troubleshooting.md
+[Exercises Status]: ./docs/exercise-status.md

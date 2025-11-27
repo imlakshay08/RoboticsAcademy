@@ -2,6 +2,7 @@ import numpy as np
 import rclpy
 import threading
 import time
+import sys
 
 from hal_interfaces.general.camera import CameraNode
 from jderobot_drones.drone_wrapper import DroneWrapper
@@ -10,6 +11,16 @@ IMG_WIDTH = 320
 IMG_HEIGHT = 240
 freq = 30.0
 
+
+# Mutes exceptions
+def custom_thread_excepthook(args):
+    if "spin" in args.thread.name:
+        return
+    sys.__excepthook__(args.exc_type, args.exc_value, args.exc_traceback)
+
+
+threading.excepthook = custom_thread_excepthook
+
 ### HAL INIT ###
 
 print("HAL initializing", flush=True)
@@ -17,23 +28,30 @@ if not rclpy.ok():
     rclpy.init()
 
 
-    CAM_FRONTAL_TOPIC = "/" + "drone0" + "/sensor_measurements/frontal_camera/image_raw"
-    CAM_VENTRAL_TOPIC = "/" + "drone0" + "/sensor_measurements/ventral_camera/image_raw"
+CAM_FRONTAL_TOPIC = "/" + "drone0" + "/sensor_measurements/frontal_camera/image_raw"
+CAM_VENTRAL_TOPIC = "/" + "drone0" + "/sensor_measurements/ventral_camera/image_raw"
 
-    drone = DroneWrapper()
-    frontal_camera_node = CameraNode(CAM_FRONTAL_TOPIC)
-    ventral_camera_node = CameraNode(CAM_VENTRAL_TOPIC)
+drone = DroneWrapper()
+frontal_camera_node = CameraNode(CAM_FRONTAL_TOPIC)
+ventral_camera_node = CameraNode(CAM_VENTRAL_TOPIC)
 
-    # Spin nodes so that subscription callbacks load topic data
-    executor = rclpy.executors.MultiThreadedExecutor()
-    executor.add_node(frontal_camera_node)
-    executor.add_node(ventral_camera_node)
-    def __auto_spin() -> None:
-        while rclpy.ok():
+# Spin nodes so that subscription callbacks load topic data
+executor = rclpy.executors.MultiThreadedExecutor()
+executor.add_node(frontal_camera_node)
+executor.add_node(ventral_camera_node)
+
+
+def __auto_spin() -> None:
+    while rclpy.ok():
+        try:
             executor.spin_once(timeout_sec=0)
-            time.sleep(1/freq)
-    executor_thread = threading.Thread(target=__auto_spin, daemon=True)
-    executor_thread.start()
+        except Exception:
+            pass
+        time.sleep(1 / freq)
+
+
+executor_thread = threading.Thread(target=__auto_spin, daemon=True)
+executor_thread.start()
 
 ### GETTERS ###
 

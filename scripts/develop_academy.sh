@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Initialize variables with default values
 ram_version="https://github.com/JdeRobot/RoboticsApplicationManager.git"
@@ -28,20 +28,43 @@ cleanup() {
     docker compose down
   fi
   rm docker-compose.yaml
+  rm react_frontend/checksum.txt
   
   exit 0
 }
 
-while getopts ":r:b:i:g:n:t:h" opt; do
-  case $opt in
-    r) ram_version="$OPTARG" ;;
-    b) branch="$OPTARG" ;;
-    i) radi_version="$OPTARG" ;; 
-    g) gpu_mode="true" ;; 
-    n) nvidia="true" ;;
-    h) show_help; exit 0 ;;  # Display help message and exit
-    \?) echo "Invalid option: -$OPTARG" >&2 ;;   # If an invalid option is provided, print an error message
-  esac
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -r) 
+            ram_version="$2"
+            shift 2
+            ;;
+        -b)
+            branch="$2"
+            shift 2
+            ;;
+        -i)
+            radi_version="$2"
+            shift 2
+            ;;
+        -g)
+            gpu_mode="true"
+            shift 1
+            ;;
+        -n)
+            nvidia="true"
+            shift 1
+            ;;
+        -h | --help) # display Help
+            show_help
+            exit 0
+            ;;
+        *)
+            echo "Invalid Option: $1"
+            Help
+            exit 1
+            ;;
+   esac
 done
 
 # Set up trap to catch interrupt signal (Ctrl+C) and execute cleanup function
@@ -51,9 +74,9 @@ echo "RAM src: $ram_version"
 echo "RAM branch: $branch"
 echo "RoboticsBackend version: $radi_version"
 
-# Install docker-compose if not installed
-if ! command -v docker-compose &> /dev/null; then
-  sudo apt install docker-compose
+# Check docker compose installation
+if ! command -v docker compose &> /dev/null; then
+  echo "Docker Compose V2 is not installed. Please install it."
 fi
 
 # Clone the desired RAM fork and branch
@@ -72,8 +95,36 @@ if ! command -v nvm &> /dev/null; then
 fi
 
 # Prepare yarn 
-if ! command -v yarn --version &> /dev/null; then
-  npm install --global yarn
+if ! command -v yarn &> /dev/null; then
+  echo "Yarn is not installed. Installing Yarn..."
+  
+  # Check if npm exists or not
+  if command -v npm &> /dev/null; then
+    npm install --global yarn
+  else
+    echo "npm is not installed. Installing Node.js and npm first..."
+    
+    # Detect OS and install npm and node.js accordingly
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+      curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+      sudo apt-get install -y nodejs
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+      if command -v brew &> /dev/null; then
+        brew install node
+      else
+        echo "Homebrew not found. Please install Yarn manually: https://yarnpkg.com/getting-started/install"
+        exit 1
+      fi
+    else
+      echo "Unsupported OS. Please install Yarn manually: https://yarnpkg.com/getting-started/install"
+      exit 1
+    fi
+    
+    npm install --global yarn
+  fi
+  echo "Yarn installed successfully."
+else
+  echo "Yarn is already installed."
 fi
 
 # Prepare the commons zip file
@@ -90,11 +141,42 @@ cd ../..
 mv common/common.zip react_frontend/src/common.zip
 
 # Prepare the frontend
-nvm install 17
-nvm use 17
+nvm install 20
+nvm use 20
+
+# Checking if the frontend needs compilation
 cd react_frontend/
-yarn install
-yarn build
+DIRECTORY_TO_MONITOR="."
+
+new_checksum=$(find "$DIRECTORY_TO_MONITOR" \( -path "*/node_modules" -o \
+            -path "*/__pycache__" -o \
+            -path "*/migrations" -o \
+            -name "yarn.lock" -o \
+            -name "checksum.txt" \) -prune \
+            -o -type f -exec md5sum {} + | \
+            sort | \
+            md5sum | \
+            awk '{print $1}')
+
+existing_checksum_file="$DIRECTORY_TO_MONITOR/checksum.txt"
+
+if [ -f "$existing_checksum_file" ]; then
+    existing_checksum=$(cat "$existing_checksum_file")
+    if [ "$existing_checksum" != "$new_checksum" ]; then
+        echo "$new_checksum" > "$existing_checksum_file"
+        yarn install 
+        yarn dev &
+        sleep 10
+    else
+        echo "No Compilation needed"
+    fi
+else
+    echo "$new_checksum" > "$existing_checksum_file"
+    yarn install 
+    yarn dev &
+    sleep 10
+fi
+
 cd ..
 
 # Prepare the compose file
@@ -112,3 +194,5 @@ if [ "$nvidia" = "true" ]; then
 else
   docker compose up
 fi 
+
+cleanup
