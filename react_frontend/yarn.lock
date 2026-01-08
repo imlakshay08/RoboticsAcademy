@@ -5245,10 +5245,10 @@ jderobot-commsmanager@^1.0.10:
   dependencies:
     uuid "^11.1.0"
 
-jderobot-ide-interface@0.2.68:
-  version "0.2.68"
-  resolved "https://registry.yarnpkg.com/jderobot-ide-interface/-/jderobot-ide-interface-0.2.68.tgz#c7cd388dbcd434fb19b64c3d89eae0999e673ead"
-  integrity sha512-RnwFjCcovVMoPF8vb0m0TeMqrdsep6e8Zfj3+fot0wyDM5heTYy6EPpIEjLzjMPMI5qKiYLe1PTNHY0qFdpAiw==
+jderobot-ide-interface@0.2.87:
+  version "0.2.87"
+  resolved "https://registry.yarnpkg.com/jderobot-ide-interface/-/jderobot-ide-interface-0.2.87.tgz#eeb715d090171248c6d454209a08e610f583aec3"
+  integrity sha512-3ulWEfxOODO2kscFCMmjuVlcV4/E6So66/cEk9Qd0syYRlQfrSfoWvaLOAhhZGXvbWs7HLGFv20dS+UfNt0Nkg==
   dependencies:
     "@monaco-editor/react" "^4.7.0"
     jderobot-commsmanager "^1.0.10"

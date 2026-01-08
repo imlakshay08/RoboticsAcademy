@@ -139,7 +139,6 @@ COPY public.exercises (id, exercise_id, name, description, tags, status, url) FR
 24	car_junction	Car Junction	Autonomous Navigation through traffic at road junction.	["AUTONOMOUS DRIVING","ROS2"]	PROTOTYPE	https://jderobot.github.io/RoboticsAcademy/exercises/AutonomousCars/car_junction
 25	machine_vision	Machine Vision	Machine Vision exercise	["ROS2"]	ACTIVE	https://jderobot.github.io/RoboticsAcademy/exercises/IndustrialRobots/machine_vision
 26	labyrinth_escape	Labyrinth Escape	Labyrinth Escape exercise	["ROS2","Drones"]	ACTIVE	https://jderobot.github.io/RoboticsAcademy/exercises/Drones/labyrinth_escape
-27	autoparking_lidar	Lidar Autoparking	Autoparking exercise with Lidar	["AUTONOMOUS DRIVING","SERVICE ROBOTS","ROS2"]	PROTOTYPE	https://jderobot.github.io/RoboticsAcademy/exercises/AutonomousCars/autoparking
 \.
 
 --
@@ -148,8 +147,8 @@ COPY public.exercises (id, exercise_id, name, description, tags, status, url) FR
 
 
 COPY public.exercises_universes (id, exercise_id, universe_id, is_default) FROM stdin;
-1	2	1	False
-2	5	1	False
+1	2	1	True
+2	5	1	True
 3	6	2	True
 4	7	31	False
 5	10	4	False
@@ -158,9 +157,9 @@ COPY public.exercises_universes (id, exercise_id, universe_id, is_default) FROM 
 8	4	7	False
 9	4	8	False
 10	3	9	False
-11	11	1	False
+11	11	1	True
 12	8	10	False
-13	9	12	False
+13	9	12	True
 14	3	13	False
 15	3	14	False
 16	3	15	False
@@ -193,8 +192,19 @@ COPY public.exercises_universes (id, exercise_id, universe_id, is_default) FROM 
 43	3	41	True
 44	3	42	True
 45	3	43	True
-46	27	44	True
+46	3	44	True
 47	6	11	False
+48	2	45	False
+49	5	45	False
+50	11	45	False
+51	9	46	False
+52	1	48	False
+53	1	49	False
+54	1	50	False
+55	1	51	False
+56	1	52	False
+57	1	53	False
+58	12	54	False
 \.
 -- 30  16  3
 
@@ -280,9 +290,6 @@ COPY public.exercises_tools (id, exercise_id, tool_id) FROM stdin;
 75	26	console
 76	26	simulator
 77	26	web_gui
-78	27	console
-79	27	simulator
-80	27	web_gui
 \.
 
 --
